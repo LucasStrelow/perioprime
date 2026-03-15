@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dashboard</title>
+<style>
+:root {
+  --bg:       #0f0f1a;
+  --surface:  #1a1a2e;
+  --surface2: #22223b;
+  --border:   #2d2d4e;
+  --accent:   #6366f1;
+  --accent2:  #818cf8;
+  --success:  #10b981;
+  --danger:   #ef4444;
+  --warning:  #f59e0b;
+  --text:     #e2e8f0;
+  --muted:    #94a3b8;
+  --radius:   10px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px;
+  min-height: 100vh;
+}
+
+/* Top Bar */
+.topbar {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 14px 28px; display: flex; align-items: center; gap: 16px;
+  flex-wrap: wrap;
+}
+.topbar-logo img { height: 36px; border-radius: 6px; }
+.topbar-logo span { font-size: 22px; }
+.topbar-title { flex: 1 }
+.topbar-title h1 { font-size: 18px; font-weight: 700; }
+.topbar-title p  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.sync-info { font-size: 11px; color: var(--muted); text-align: right; }
+.sync-info button {
+  background: none; border: 1px solid var(--border); color: var(--accent2);
+  padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer;
+  margin-left: 8px;
+}
+.sync-info button:hover { background: var(--surface2); }
+
+/* Period Filter */
+.period-bar {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 10px 28px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+}
+.period-bar span { color: var(--muted); font-size: 12px; margin-right: 4px; }
+.pill {
+  padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  border: 1px solid var(--border); background: var(--surface2);
+  color: var(--muted); cursor: pointer; transition: all .15s;
+}
+.pill:hover  { border-color: var(--accent2); color: var(--accent2); }
+.pill.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* Main layout */
+.main-content { display: grid; grid-template-columns: 1fr 380px; gap: 20px; padding: 24px 28px; max-width: 1300px; margin: 0 auto; }
+@media (max-width: 900px) { .main-content { grid-template-columns: 1fr; } }
+
+/* Section header */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.section-title { font-size: 13px; font-weight: 700; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+
+/* Metric cards grid */
+.metrics-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px;
+  margin-bottom: 20px;
+}
+.metric-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px;
+  transition: border-color .2s;
+}
+.metric-card:hover { border-color: var(--accent2); }
+.metric-label {
+  font-size: 11px; color: var(--muted); text-transform: uppercase;
+  letter-spacing: .06em; margin-bottom: 8px;
+}
+.metric-value { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1; }
+.metric-sub   { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.metric-icon  { font-size: 18px; margin-bottom: 6px; }
+
+/* Campaigns note */
+.campaigns-note {
+  font-size: 11px; color: var(--muted); padding: 8px 12px;
+  background: var(--surface2); border-radius: 6px; margin-bottom: 16px;
+}
+
+/* Right panel */
+.right-panel {}
+
+/* Funnel */
+.funnel-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
+}
+
+/* Funnel rows */
+.funnel-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.funnel-row:last-child { border-bottom: none; }
+.funnel-row-left  { display: flex; align-items: center; gap: 10px; }
+.funnel-icon  { font-size: 18px; }
+.funnel-label { font-size: 13px; font-weight: 600; }
+.funnel-sub   { font-size: 11px; color: var(--muted); }
+.funnel-value { font-size: 20px; font-weight: 700; color: var(--text); min-width: 60px; text-align: right; }
+.funnel-value.editable {
+  cursor: pointer; border-bottom: 1px dashed var(--accent);
+  padding-bottom: 2px; color: var(--accent2);
+}
+.funnel-value.editable:hover { color: var(--accent); }
+.funnel-input {
+  background: var(--surface2); border: 1px solid var(--accent);
+  color: var(--text); border-radius: 6px; padding: 4px 10px;
+  font-size: 16px; font-weight: 700; width: 100px; text-align: right;
+  outline: none;
+}
+
+/* Conversion indicators */
+.kpi-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  margin-bottom: 16px;
+}
+.kpi-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px; text-align: center;
+}
+.kpi-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+.kpi-value { font-size: 18px; font-weight: 700; }
+.kpi-good   { color: var(--success); }
+.kpi-medium { color: var(--warning); }
+.kpi-bad    { color: var(--danger); }
+
+/* Closings section */
+.closings-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+}
+.tab-header { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
+.tab {
+  padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+  color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: all .15s;
+}
+.tab.active { color: var(--accent2); border-bottom-color: var(--accent); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Add closing form */
+.add-form { display: flex; flex-direction: column; gap: 10px; }
+.add-form-row { display: flex; gap: 8px; }
+.add-form input {
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); border-radius: 6px; padding: 8px 12px;
+  font-size: 13px; outline: none; transition: border .2s; width: 100%;
+}
+.add-form input:focus { border-color: var(--accent); }
+button.btn-add {
+  background: var(--accent); color: #fff; border: none;
+  border-radius: 6px; padding: 8px 18px; font-size: 13px;
+  font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+button.btn-add:hover { opacity: .85; }
+
+/* Closing entries list */
+.closing-list { max-height: 300px; overflow-y: auto; }
+.closing-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid var(--border); gap: 8px;
+}
+.closing-item:last-child { border-bottom: none; }
+.closing-item-info { flex: 1 }
+.closing-item-name { font-size: 13px; font-weight: 600; }
+.closing-item-date { font-size: 11px; color: var(--muted); }
+.closing-item-amount { font-size: 15px; font-weight: 700; color: var(--success); white-space: nowrap; }
+.closing-item-del {
+  background: none; border: none; color: var(--muted);
+  cursor: pointer; font-size: 16px; padding: 2px 6px;
+}
+.closing-item-del:hover { color: var(--danger); }
+.empty-state { text-align: center; color: var(--muted); padding: 24px; font-size: 13px; }
+
+/* Spinner */
+.spinner {
+  display: inline-block; width: 14px; height: 14px;
+  border: 2px solid var(--border); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Error / loading state */
+.loading-overlay {
+  display: flex; align-items: center; justify-content: center;
+  padding: 60px; color: var(--muted); font-size: 15px; gap: 12px;
+}
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 1000;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 18px; font-size: 13px;
+  opacity: 0; transform: translateY(10px);
+  transition: opacity .3s, transform .3s; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.success { border-left: 3px solid var(--success); }
+.toast.error   { border-left: 3px solid var(--danger); }
+
+/* Error card */
+.error-banner {
+  background: #ef444415; border: 1px solid #ef444444;
+  border-radius: 8px; padding: 12px 16px; margin-bottom: 16px;
+  font-size: 13px; color: #fca5a5;
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo" id="logo-area"><span>⚡</span></div>
+  <div class="topbar-title">
+    <h1 id="client-title">Carregando...</h1>
+    <p id="campaigns-subtitle">Dados de campanhas</p>
+  </div>
+  <div class="sync-info" id="sync-info">
+    <span id="last-sync">—</span>
+    <button onclick="loadData(true)">↻ Atualizar</button>
+  </div>
+</div>
+
+<div class="period-bar">
+  <span>Período:</span>
+  <div class="pill active" data-preset="today"       onclick="setPeriod(this)">Hoje</div>
+  <div class="pill"        data-preset="last_7d"     onclick="setPeriod(this)">Últimos 7 dias</div>
+  <div class="pill"        data-preset="this_month"  onclick="setPeriod(this)">Este mês</div>
+  <div class="pill"        data-preset="last_month"  onclick="setPeriod(this)">Último mês</div>
+  <div class="pill"        data-preset="maximum"     onclick="setPeriod(this)">Máximo</div>
+</div>
+
+<div class="main-content" id="main-content">
+  <div class="loading-overlay" style="grid-column:1/-1">
+    <div class="spinner"></div> Carregando dados...
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TOKEN   = window.location.pathname.split('/').pop();
+const API     = '';
+let currentPreset = 'today';
+let metaData  = null;
+let funnelData = null;
+let currentDates = { start: '', end: '' };
+
+// ── Period ────────────────────────────────────────────────────────────────────
+function setPeriod(el) {
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  currentPreset = el.dataset.preset;
+  loadData();
+}
+
+function dateRangeForPreset(preset) {
+  const today = new Date();
+  const fmt = d => d.toISOString().slice(0,10);
+  if (preset === 'today')      return [fmt(today), fmt(today)];
+  if (preset === 'last_7d')    { const s = new Date(today); s.setDate(s.getDate()-6); return [fmt(s), fmt(today)]; }
+  if (preset === 'this_month') { const s = new Date(today.getFullYear(), today.getMonth(), 1); return [fmt(s), fmt(today)]; }
+  if (preset === 'last_month') {
+    const s = new Date(today.getFullYear(), today.getMonth()-1, 1);
+    const e = new Date(today.getFullYear(), today.getMonth(), 0);
+    return [fmt(s), fmt(e)];
+  }
+  return ['2020-01-01', fmt(today)]; // maximum
+}
+
+// ── Load ──────────────────────────────────────────────────────────────────────
+async function loadData(forceRefresh = false) {
+  const [start, end] = dateRangeForPreset(currentPreset);
+  currentDates = { start, end };
+
+  // Fetch Meta + Funnel in parallel
+  const [metaResp, funnelResp] = await Promise.all([
+    fetch(`${API}/api/dashboard/${TOKEN}/meta?preset=${currentPreset}`),
+    fetch(`${API}/api/dashboard/${TOKEN}/funnel?start=${start}&end=${end}`),
+  ]);
+
+  if (!metaResp.ok) {
+    document.getElementById('main-content').innerHTML =
+      `<div class="loading-overlay" style="grid-column:1/-1">❌ Dashboard não encontrado ou inativo.</div>`;
+    return;
+  }
+
+  metaData   = await metaResp.json();
+  funnelData = await funnelResp.json();
+
+  // Update header
+  document.getElementById('client-title').textContent = metaData.client_name || 'Dashboard';
+  document.getElementById('campaigns-subtitle').textContent =
+    metaData.campaigns?.length
+      ? 'Campanhas: ' + metaData.campaigns.map(c => c.campaign_name || c.campaign_id).join(', ')
+      : 'Todas as campanhas da conta';
+
+  if (metaData.agency_logo_url) {
+    document.getElementById('logo-area').innerHTML =
+      `<img src="${metaData.agency_logo_url}" alt="Logo"/>`;
+  }
+
+  const syncTime = metaData.fetched_at
+    ? new Date(metaData.fetched_at + 'Z').toLocaleString('pt-BR')
+    : '—';
+  document.getElementById('last-sync').textContent =
+    `${metaData.from_cache ? '⏱ Cache:' : '✅ Atualizado:'} ${syncTime}`;
+
+  renderMain();
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function renderMain() {
+  const m = metaData;
+  const f = funnelData;
+
+  const errorBanner = m.fetch_error
+    ? `<div class="error-banner">⚠️ Erro ao buscar dados do Meta: ${m.fetch_error}. Mostrando cache anterior.</div>`
+    : '';
+
+  document.getElementById('main-content').innerHTML = `
+    <!-- Left: Meta Ads Metrics -->
+    <div class="left-panel">
+      ${errorBanner}
+      <div class="section-header">
+        <span class="section-title">📊 Métricas do Meta Ads</span>
+      </div>
+
+      <div class="metrics-grid">
+        ${metricCard('💰', 'Investido', 'R$ ' + fmt(m.spend, 2), periodLabel())}
+        ${metricCard('👁', 'Impressões', fmtNum(m.impressions), '')}
+        ${metricCard('🎯', 'Alcance', fmtNum(m.reach), '')}
+        ${metricCard('🔁', 'Frequência', fmt(m.frequency, 1) + 'x', 'impressões/pessoa')}
+        ${metricCard('🖱', 'Cliques', fmtNum(m.clicks), '')}
+        ${metricCard('🔗', 'Cliques no Link', fmtNum(m.link_clicks), '')}
+        ${metricCard('📈', 'CTR (link único)', fmt(m.ctr_link, 2) + '%', '')}
+        ${metricCard('💬', 'Conv. Mensagem', fmtNum(m.msg_conversations), '')}
+        ${metricCard('💸', 'Custo / Mensagem', m.cost_per_msg ? 'R$ ' + fmt(m.cost_per_msg, 2) : '—', '')}
+        ${metricCard('📸', 'Visitas Perfil IG', fmtNum(m.profile_visits), '')}
+        ${metricCard('📸', 'Custo / Visita', m.cost_per_profile ? 'R$ ' + fmt(m.cost_per_profile, 2) : '—', '')}
+        ${metricCard('🎯', 'Leads (mensagens)', fmtNum(m.leads), 'conv. mensagem')}
+      </div>
+    </div>
+
+    <!-- Right: Sales Funnel + Closings -->
+    <div class="right-panel">
+      <div class="section-header">
+        <span class="section-title">🦷 Funil de Vendas</span>
+      </div>
+
+      <div class="funnel-card" id="funnel-card">
+        ${buildFunnelRows(f, m.leads)}
+      </div>
+
+      <div class="kpi-grid" id="kpi-grid">
+        ${buildKPIs(f, m)}
+      </div>
+
+      <div class="closings-card">
+        <div class="tab-header">
+          <div class="tab active" onclick="switchTab('history',this)">Histórico de Fechamentos</div>
+          <div class="tab"       onclick="switchTab('add',this)">+ Novo Fechamento</div>
+        </div>
+        <div class="tab-content active" id="tab-history">
+          ${buildClosingsList(f.closing_entries)}
+        </div>
+        <div class="tab-content" id="tab-add">
+          ${buildAddClosingForm()}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function metricCard(icon, label, value, sub) {
+  return `<div class="metric-card">
+    <div class="metric-icon">${icon}</div>
+    <div class="metric-label">${label}</div>
+    <div class="metric-value">${value}</div>
+    ${sub ? `<div class="metric-sub">${sub}</div>` : ''}
+  </div>`;
+}
+
+function periodLabel() {
+  const labels = {today:'hoje', last_7d:'7 dias', this_month:'este mês', last_month:'último mês', maximum:'total'};
+  return labels[currentPreset] || '';
+}
+
+function buildFunnelRows(f, leads) {
+  const rows = [
+    {icon:'🎯', label:'Leads', sub:'do Meta Ads', value: fmtNum(leads), field: null},
+    {icon:'📅', label:'Agendamentos', sub:'clique para editar', value: f.appointments, field:'appointments'},
+    {icon:'🦷', label:'Avaliações', sub:'clique para editar', value: f.evaluations, field:'evaluations'},
+    {icon:'💼', label:'Fechamentos', sub:'clique para editar', value: f.closings, field:'closings'},
+    {icon:'💵', label:'Valor Total', sub:'R$ clique para editar', value: f.closing_value, field:'closing_value', isMoney: true},
+  ];
+
+  return rows.map(r => {
+    if (!r.field) {
+      return `<div class="funnel-row">
+        <div class="funnel-row-left">
+          <span class="funnel-icon">${r.icon}</span>
+          <div><div class="funnel-label">${r.label}</div><div class="funnel-sub">${r.sub}</div></div>
+        </div>
+        <div class="funnel-value">${r.value}</div>
+      </div>`;
+    }
+    const displayVal = r.isMoney
+      ? 'R$ ' + fmt(r.value, 2)
+      : String(r.value);
+    return `<div class="funnel-row" id="row-${r.field}">
+      <div class="funnel-row-left">
+        <span class="funnel-icon">${r.icon}</span>
+        <div><div class="funnel-label">${r.label}</div><div class="funnel-sub">${r.sub}</div></div>
+      </div>
+      <div class="funnel-value editable" id="val-${r.field}"
+           onclick="startEdit('${r.field}', ${r.value}, ${r.isMoney||false})"
+           title="Clique para editar">
+        ${displayVal}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function buildKPIs(f, m) {
+  const leads = m.leads || 0;
+  function pct(a, b) { return b > 0 ? (a / b * 100) : 0; }
+  function colorClass(v) { return v >= 60 ? 'kpi-good' : v >= 30 ? 'kpi-medium' : 'kpi-bad'; }
+
+  const kpis = [
+    {label:'Agend. / Lead',  value: pct(f.appointments, leads)},
+    {label:'Aval. / Agend.', value: pct(f.evaluations, f.appointments)},
+    {label:'Fecha. / Aval.', value: pct(f.closings, f.evaluations)},
+    {label:'Custo / Fecha.',  value: null, text: f.closings > 0 ? 'R$ '+fmt(m.spend/f.closings,2) : '—', cls:''},
+  ];
+
+  return kpis.map(k => {
+    const display = k.value !== null ? fmt(k.value,1)+'%' : k.text;
+    const cls     = k.value !== null ? colorClass(k.value) : k.cls;
+    return `<div class="kpi-card"><div class="kpi-label">${k.label}</div><div class="kpi-value ${cls}">${display}</div></div>`;
+  }).join('') +
+  `<div class="kpi-card" style="grid-column:1/-1">
+    <div class="kpi-label">ROI (Receita / Investido)</div>
+    <div class="kpi-value ${m.spend > 0 && f.closing_value > 0 ? (f.closing_value/m.spend >= 2 ? 'kpi-good':'kpi-medium') : ''}">
+      ${m.spend > 0 && f.closing_value > 0 ? fmt(f.closing_value/m.spend*100,0)+'%' : '—'}
+    </div>
+  </div>`;
+}
+
+function buildClosingsList(entries) {
+  if (!entries || !entries.length) {
+    return '<div class="empty-state">Nenhum fechamento registrado neste período.</div>';
+  }
+  const total = entries.reduce((s, e) => s + e.amount, 0);
+  return `
+    <div class="closing-list">
+      ${entries.map(e => `
+        <div class="closing-item" id="closing-${e.id}">
+          <div class="closing-item-info">
+            <div class="closing-item-name">${e.patient_name || 'Paciente'}</div>
+            <div class="closing-item-date">${formatDate(e.entry_date)} ${e.notes ? '· ' + e.notes : ''}</div>
+          </div>
+          <div class="closing-item-amount">R$ ${fmt(e.amount,2)}</div>
+          <button class="closing-item-del" onclick="deleteClosing(${e.id})" title="Remover">×</button>
+        </div>
+      `).join('')}
+    </div>
+    <div style="text-align:right;margin-top:10px;font-size:13px;color:var(--muted)">
+      Total: <strong style="color:var(--success)">R$ ${fmt(total,2)}</strong>
+    </div>`;
+}
+
+function buildAddClosingForm() {
+  const today = new Date().toISOString().slice(0,10);
+  return `
+    <div class="add-form">
+      <div class="add-form-row">
+        <input type="date" id="closing-date" value="${today}" style="flex:1"/>
+        <input type="number" id="closing-amount" placeholder="Valor (R$)" step="0.01" min="0" style="flex:1"/>
+      </div>
+      <input type="text" id="closing-patient" placeholder="Nome do paciente (opcional)"/>
+      <input type="text" id="closing-notes"   placeholder="Observação (opcional)"/>
+      <button class="btn-add" onclick="addClosing()">✅ Registrar fechamento</button>
+    </div>`;
+}
+
+// ── Inline edit funnel ────────────────────────────────────────────────────────
+function startEdit(field, currentVal, isMoney) {
+  const valEl = document.getElementById('val-' + field);
+  const input = document.createElement('input');
+  input.className = 'funnel-input';
+  input.type = isMoney ? 'number' : 'number';
+  input.step = isMoney ? '0.01' : '1';
+  input.min  = '0';
+  input.value = currentVal;
+  valEl.replaceWith(input);
+  input.focus();
+  input.select();
+  input.addEventListener('blur',  () => commitEdit(field, input.value, isMoney));
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { input.blur(); }
+    if (e.key === 'Escape') { loadData(); }
+  });
+}
+
+async function commitEdit(field, rawValue, isMoney) {
+  const val   = parseFloat(rawValue) || 0;
+  const patch = { ...currentDates };
+  patch.period_start = currentDates.start;
+  patch.period_end   = currentDates.end;
+  patch[field] = isMoney ? val : Math.round(val);
+
+  const r = await fetch(`${API}/api/dashboard/${TOKEN}/funnel`, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(patch),
+  });
+  if (r.ok) { showToast('Salvo!'); } else { showToast('Erro ao salvar', 'error'); }
+  loadData();
+}
+
+// ── Add closing ───────────────────────────────────────────────────────────────
+async function addClosing() {
+  const date    = document.getElementById('closing-date').value;
+  const amount  = parseFloat(document.getElementById('closing-amount').value);
+  const patient = document.getElementById('closing-patient').value.trim();
+  const notes   = document.getElementById('closing-notes').value.trim();
+
+  if (!date || !amount || amount <= 0) { showToast('Informe data e valor', 'error'); return; }
+
+  const r = await fetch(`${API}/api/dashboard/${TOKEN}/closings`, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({entry_date: date, amount, patient_name: patient, notes}),
+  });
+  if (r.ok) { showToast('Fechamento registrado!'); loadData(); }
+  else       { showToast('Erro ao registrar', 'error'); }
+}
+
+async function deleteClosing(entryId) {
+  if (!confirm('Remover este fechamento?')) return;
+  const r = await fetch(`${API}/api/dashboard/${TOKEN}/closings/${entryId}`, {method:'DELETE'});
+  if (r.ok) { showToast('Removido'); loadData(); }
+  else       { showToast('Erro', 'error'); }
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ── Formatting ────────────────────────────────────────────────────────────────
+function fmt(n, decimals = 0) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  return Number(n).toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+function fmtNum(n) {
+  if (!n) return '0';
+  return Number(n).toLocaleString('pt-BR');
+}
+function formatDate(d) {
+  if (!d) return '';
+  const [y,m,day] = d.split('-');
+  return `${day}/${m}/${y}`;
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast show ${type}`;
+  setTimeout(() => { t.className = 'toast'; }, 3000);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadData();
+</script>
+</body>
+</html>
