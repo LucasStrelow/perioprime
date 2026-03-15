@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin — Meta Ads Dashboard</title>
+<style>
+:root {
+  --bg:       #0f0f1a;
+  --surface:  #1a1a2e;
+  --surface2: #22223b;
+  --border:   #2d2d4e;
+  --accent:   #6366f1;
+  --accent2:  #818cf8;
+  --success:  #10b981;
+  --danger:   #ef4444;
+  --warning:  #f59e0b;
+  --text:     #e2e8f0;
+  --muted:    #94a3b8;
+  --radius:   10px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; min-height: 100vh; }
+a { color: var(--accent2); text-decoration: none; }
+input, textarea, select {
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); border-radius: 6px; padding: 8px 12px;
+  font-size: 14px; width: 100%; outline: none; transition: border .2s;
+}
+input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+button {
+  cursor: pointer; border: none; border-radius: 6px;
+  padding: 8px 18px; font-size: 14px; font-weight: 600;
+  transition: opacity .2s, transform .1s;
+}
+button:hover { opacity: .85; }
+button:active { transform: scale(.97); }
+.btn-primary  { background: var(--accent);  color: #fff; }
+.btn-success  { background: var(--success); color: #fff; }
+.btn-danger   { background: var(--danger);  color: #fff; }
+.btn-ghost    { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.btn-sm       { padding: 5px 12px; font-size: 12px; }
+
+/* Login */
+#login-screen {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh;
+}
+.login-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 40px; width: 360px;
+  text-align: center;
+}
+.login-card h1 { font-size: 22px; margin-bottom: 8px; }
+.login-card p  { color: var(--muted); margin-bottom: 28px; font-size: 13px; }
+.login-card input { margin-bottom: 16px; }
+.login-error { color: var(--danger); font-size: 13px; margin-top: 8px; }
+
+/* Layout */
+#app { display: none; }
+.topbar {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 14px 32px; display: flex; align-items: center; gap: 16px;
+}
+.topbar h1 { font-size: 18px; font-weight: 700; flex: 1; }
+.topbar span { color: var(--muted); font-size: 13px; }
+
+.content { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+/* Section card */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px; margin-bottom: 24px;
+}
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.card-header h2 { font-size: 16px; font-weight: 600; }
+
+/* Form grid */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-grid .full { grid-column: 1 / -1; }
+.form-label { font-size: 12px; color: var(--muted); margin-bottom: 5px; display: block; }
+.form-group { display: flex; flex-direction: column; }
+
+/* Client list */
+.client-card {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px; margin-bottom: 12px;
+}
+.client-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.client-name { font-size: 15px; font-weight: 600; }
+.client-id   { font-size: 12px; color: var(--muted); }
+.client-badge {
+  font-size: 11px; padding: 3px 10px; border-radius: 20px;
+  font-weight: 600;
+}
+.badge-active   { background: #10b98133; color: var(--success); }
+.badge-inactive { background: #ef444433; color: var(--danger); }
+
+.link-box {
+  background: var(--bg); border: 1px dashed var(--border);
+  border-radius: 6px; padding: 8px 12px; font-size: 12px;
+  color: var(--accent2); display: flex; align-items: center;
+  justify-content: space-between; gap: 8px; margin-bottom: 12px;
+  word-break: break-all;
+}
+.copy-btn {
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); font-size: 11px; padding: 4px 10px;
+  border-radius: 4px; cursor: pointer; white-space: nowrap;
+  flex-shrink: 0;
+}
+.copy-btn:hover { background: var(--border); }
+
+/* Campaign chips */
+.campaign-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.campaign-chip {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 10px 4px 12px;
+  font-size: 12px; display: flex; align-items: center; gap: 6px;
+}
+.campaign-chip button {
+  background: none; color: var(--muted); padding: 0; font-size: 14px;
+  border: none; cursor: pointer; line-height: 1;
+}
+.campaign-chip button:hover { color: var(--danger); }
+.no-campaigns { color: var(--muted); font-size: 12px; font-style: italic; }
+
+/* Add campaign inline */
+.add-campaign-row {
+  display: flex; gap: 8px; align-items: flex-end; margin-top: 10px;
+}
+.add-campaign-row input { flex: 1; }
+
+/* Meta campaign search */
+.search-results {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; margin-top: 6px; max-height: 220px; overflow-y: auto;
+}
+.search-item {
+  padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.search-item:hover { background: var(--border); }
+.search-item:last-child { border-bottom: none; }
+.search-item-name  { font-size: 13px; }
+.search-item-id    { font-size: 11px; color: var(--muted); }
+.search-item-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+.status-ACTIVE   { background: #10b98122; color: var(--success); }
+.status-PAUSED   { background: #f59e0b22; color: var(--warning); }
+.status-ARCHIVED { background: #ef444422; color: var(--danger); }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 1000;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 18px; font-size: 13px;
+  opacity: 0; transform: translateY(10px);
+  transition: opacity .3s, transform .3s; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.success { border-left: 3px solid var(--success); }
+.toast.error   { border-left: 3px solid var(--danger); }
+
+/* Loader */
+.spinner {
+  display: inline-block; width: 16px; height: 16px;
+  border: 2px solid var(--border); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.actions-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="login-screen">
+  <div class="login-card">
+    <h1>🔒 Admin</h1>
+    <p>Dashboard de gestão de clientes<br>Meta Ads</p>
+    <input type="password" id="pw-input" placeholder="Senha de acesso" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="btn-primary" style="width:100%" onclick="doLogin()">Entrar</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="app">
+  <div class="topbar">
+    <h1>⚡ Meta Ads Admin</h1>
+    <span id="topbar-info">Gerenciar clientes e campanhas</span>
+  </div>
+
+  <div class="content">
+
+    <!-- Create Client -->
+    <div class="card">
+      <div class="card-header">
+        <h2>➕ Novo Cliente</h2>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Nome do cliente / clínica</label>
+          <input type="text" id="new-name" placeholder="Ex: Clínica Sorriso"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ID da conta de anúncios (sem "act_")</label>
+          <input type="text" id="new-account" placeholder="Ex: 1234567890"/>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Meta Access Token</label>
+          <input type="text" id="new-token" placeholder="EAAxxxxx..."/>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">URL do logo da agência (opcional)</label>
+          <input type="text" id="new-logo" placeholder="https://suaagencia.com/logo.png"/>
+        </div>
+      </div>
+      <div style="margin-top:16px; display:flex; gap:10px; align-items:center">
+        <button class="btn-primary" onclick="createClient()">Criar cliente</button>
+        <span id="create-status"></span>
+      </div>
+    </div>
+
+    <!-- Search Meta Campaigns helper -->
+    <div class="card">
+      <div class="card-header">
+        <h2>🔍 Buscar Campanhas no Meta</h2>
+      </div>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:14px">
+        Use esta ferramenta para encontrar os IDs das campanhas de uma conta antes de adicioná-las a um cliente.
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+        <div class="form-group" style="flex:1;min-width:200px">
+          <label class="form-label">ID da conta de anúncios</label>
+          <input type="text" id="search-account" placeholder="1234567890"/>
+        </div>
+        <div class="form-group" style="flex:2;min-width:300px">
+          <label class="form-label">Access Token</label>
+          <input type="text" id="search-token" placeholder="EAAxxxxx..."/>
+        </div>
+        <button class="btn-ghost" onclick="searchCampaigns()" style="margin-bottom:1px">
+          <span class="spinner" id="search-spin" style="display:none"></span>
+          Buscar campanhas
+        </button>
+      </div>
+      <div id="search-results-container" style="margin-top:12px"></div>
+    </div>
+
+    <!-- Clients List -->
+    <div class="card">
+      <div class="card-header">
+        <h2>👥 Clientes</h2>
+        <button class="btn-ghost btn-sm" onclick="loadClients()">↻ Atualizar</button>
+      </div>
+      <div id="clients-list">
+        <div style="color:var(--muted);text-align:center;padding:32px">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+let authOk = false;
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const pw = document.getElementById('pw-input').value.trim();
+  if (!pw) return;
+  const r = await fetch(API + '/api/admin/login', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({password: pw})
+  });
+  if (r.ok) {
+    authOk = true;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadClients();
+  } else {
+    document.getElementById('login-error').textContent = 'Senha incorreta.';
+  }
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast show ${type}`;
+  setTimeout(() => { t.className = 'toast'; }, 3000);
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => showToast('Link copiado!'));
+}
+
+// ── Create Client ─────────────────────────────────────────────────────────────
+async function createClient() {
+  const name    = document.getElementById('new-name').value.trim();
+  const account = document.getElementById('new-account').value.trim();
+  const token   = document.getElementById('new-token').value.trim();
+  const logo    = document.getElementById('new-logo').value.trim();
+  if (!name || !account || !token) { showToast('Preencha todos os campos obrigatórios', 'error'); return; }
+
+  const status = document.getElementById('create-status');
+  status.innerHTML = '<span class="spinner"></span>';
+
+  const r = await fetch(API + '/api/admin/clients', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({name, meta_account_id: account, meta_token: token, agency_logo_url: logo})
+  });
+  const d = await r.json();
+  if (r.ok) {
+    showToast('Cliente criado com sucesso!');
+    status.innerHTML = '';
+    document.getElementById('new-name').value = '';
+    document.getElementById('new-account').value = '';
+    document.getElementById('new-token').value = '';
+    document.getElementById('new-logo').value = '';
+    loadClients();
+  } else {
+    showToast('Erro ao criar cliente: ' + (d.detail || ''), 'error');
+    status.innerHTML = '';
+  }
+}
+
+// ── Load Clients ──────────────────────────────────────────────────────────────
+async function loadClients() {
+  const container = document.getElementById('clients-list');
+  container.innerHTML = '<div style="color:var(--muted);text-align:center;padding:32px"><div class="spinner"></div></div>';
+
+  const r = await fetch(API + '/api/admin/clients');
+  const clients = await r.json();
+
+  if (!clients.length) {
+    container.innerHTML = '<p style="color:var(--muted);text-align:center;padding:32px">Nenhum cliente cadastrado ainda.</p>';
+    return;
+  }
+
+  container.innerHTML = clients.map(c => buildClientCard(c)).join('');
+}
+
+function buildClientCard(c) {
+  const dashUrl = window.location.origin + c.dashboard_url;
+  const statusBadge = c.is_active
+    ? '<span class="client-badge badge-active">● Ativo</span>'
+    : '<span class="client-badge badge-inactive">● Inativo</span>';
+
+  const campaigns = c.campaigns.length
+    ? c.campaigns.map(cp =>
+        `<div class="campaign-chip">
+          <span title="ID: ${cp.campaign_id}">${cp.campaign_name || cp.campaign_id}</span>
+          <small style="color:var(--muted)">#${cp.campaign_id}</small>
+          <button onclick="removeCampaign(${c.id}, ${cp.id}, this)" title="Remover">×</button>
+        </div>`
+      ).join('')
+    : '<span class="no-campaigns">Nenhuma campanha vinculada</span>';
+
+  return `
+  <div class="client-card" id="client-${c.id}">
+    <div class="client-header">
+      <div>
+        <div class="client-name">${c.name}</div>
+        <div class="client-id">Conta: act_${c.meta_account_id} &nbsp;|&nbsp; Token: ${c.meta_token.slice(0,20)}...</div>
+      </div>
+      ${statusBadge}
+    </div>
+
+    <div class="link-box">
+      <span>${dashUrl}</span>
+      <button class="copy-btn" onclick="copyText('${dashUrl}')">📋 Copiar</button>
+    </div>
+
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:600">CAMPANHAS VINCULADAS</div>
+    <div class="campaign-list" id="camps-${c.id}">${campaigns}</div>
+
+    <!-- Add campaign row -->
+    <div class="add-campaign-row" id="add-row-${c.id}">
+      <div class="form-group" style="flex:1">
+        <label class="form-label">ID da campanha</label>
+        <input type="text" id="camp-id-${c.id}" placeholder="123456789"/>
+      </div>
+      <div class="form-group" style="flex:2">
+        <label class="form-label">Nome da campanha</label>
+        <input type="text" id="camp-name-${c.id}" placeholder="Ex: Implante — Campanha Março"/>
+      </div>
+      <button class="btn-success btn-sm" style="margin-bottom:1px" onclick="addCampaign(${c.id})">+ Adicionar</button>
+    </div>
+
+    <hr class="divider"/>
+
+    <div class="actions-row">
+      <button class="btn-ghost btn-sm" onclick="syncClient(${c.id}, this)">↻ Sincronizar dados</button>
+      <button class="btn-ghost btn-sm" onclick="window.open('${c.dashboard_url}','_blank')">🔗 Abrir dashboard</button>
+      <button class="btn-ghost btn-sm" onclick="toggleActive(${c.id}, ${!c.is_active}, this)">${c.is_active ? '⏸ Desativar' : '▶ Ativar'}</button>
+      <button class="btn-danger  btn-sm" onclick="deleteClient(${c.id}, this)">🗑 Excluir</button>
+    </div>
+  </div>`;
+}
+
+// ── Campaign actions ──────────────────────────────────────────────────────────
+async function addCampaign(clientId) {
+  const campaignId   = document.getElementById(`camp-id-${clientId}`).value.trim();
+  const campaignName = document.getElementById(`camp-name-${clientId}`).value.trim();
+  if (!campaignId) { showToast('Informe o ID da campanha', 'error'); return; }
+
+  const r = await fetch(API + `/api/admin/clients/${clientId}/campaigns`, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({campaign_id: campaignId, campaign_name: campaignName})
+  });
+  if (r.ok) {
+    showToast('Campanha adicionada!');
+    document.getElementById(`camp-id-${clientId}`).value = '';
+    document.getElementById(`camp-name-${clientId}`).value = '';
+    loadClients();
+  } else {
+    showToast('Erro ao adicionar campanha', 'error');
+  }
+}
+
+async function removeCampaign(clientId, campaignDbId, btn) {
+  if (!confirm('Remover esta campanha do cliente?')) return;
+  btn.disabled = true;
+  const r = await fetch(API + `/api/admin/clients/${clientId}/campaigns/${campaignDbId}`, {method:'DELETE'});
+  if (r.ok) { showToast('Campanha removida'); loadClients(); }
+  else { showToast('Erro ao remover', 'error'); btn.disabled = false; }
+}
+
+async function syncClient(clientId, btn) {
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Sincronizando...';
+  const r = await fetch(API + `/api/admin/clients/${clientId}/sync?preset=last_7d`, {method:'POST'});
+  const d = await r.json();
+  if (r.ok && !d.error) {
+    showToast('Dados sincronizados com sucesso!');
+  } else {
+    showToast('Erro: ' + (d.error || d.detail || 'Falha na sincronização'), 'error');
+  }
+  btn.disabled = false; btn.innerHTML = '↻ Sincronizar dados';
+}
+
+async function toggleActive(clientId, newState, btn) {
+  btn.disabled = true;
+  const r = await fetch(API + `/api/admin/clients/${clientId}`, {
+    method: 'PUT', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({is_active: newState})
+  });
+  if (r.ok) { showToast(newState ? 'Cliente ativado' : 'Cliente desativado'); loadClients(); }
+  else { showToast('Erro', 'error'); btn.disabled = false; }
+}
+
+async function deleteClient(clientId, btn) {
+  if (!confirm('Excluir este cliente e todos os seus dados? Esta ação é irreversível.')) return;
+  btn.disabled = true;
+  const r = await fetch(API + `/api/admin/clients/${clientId}`, {method:'DELETE'});
+  if (r.ok) { showToast('Cliente excluído'); loadClients(); }
+  else { showToast('Erro ao excluir', 'error'); btn.disabled = false; }
+}
+
+// ── Search Meta Campaigns ─────────────────────────────────────────────────────
+async function searchCampaigns() {
+  const account = document.getElementById('search-account').value.trim();
+  const token   = document.getElementById('search-token').value.trim();
+  if (!account || !token) { showToast('Preencha conta e token', 'error'); return; }
+
+  const spin = document.getElementById('search-spin');
+  spin.style.display = 'inline-block';
+
+  const r = await fetch(API + `/api/admin/meta/campaigns?account_id=${encodeURIComponent(account)}&access_token=${encodeURIComponent(token)}`);
+  const d = await r.json();
+  spin.style.display = 'none';
+
+  const container = document.getElementById('search-results-container');
+  if (!r.ok || d.error) {
+    container.innerHTML = `<p style="color:var(--danger);font-size:13px">Erro: ${d.error?.message || d.detail || 'Verifique as credenciais'}</p>`;
+    return;
+  }
+
+  const campaigns = d.data || [];
+  if (!campaigns.length) { container.innerHTML = '<p style="color:var(--muted);font-size:13px">Nenhuma campanha encontrada.</p>'; return; }
+
+  container.innerHTML = `
+    <p style="color:var(--muted);font-size:12px;margin-bottom:8px">Clique para copiar o ID da campanha</p>
+    <div class="search-results">
+      ${campaigns.map(cp => `
+        <div class="search-item" onclick="copyText('${cp.id}');showToast('ID ${cp.id} copiado!')">
+          <div>
+            <div class="search-item-name">${cp.name}</div>
+            <div class="search-item-id">ID: ${cp.id}</div>
+          </div>
+          <span class="search-item-badge status-${cp.status}">${cp.status}</span>
+        </div>
+      `).join('')}
+    </div>`;
+}
+</script>
+</body>
+</html>
